@@ -36,10 +36,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AiLi1337/dsh-model-context-modification.git"
+    "url": "git+https://github.com/AiLi1337/dsh-context-length.git"
   },
-  "homepage": "https://github.com/AiLi1337/dsh-model-context-modification",
+  "homepage": "https://github.com/AiLi1337/dsh-context-length",
   "bugs": {
-    "url": "https://github.com/AiLi1337/dsh-model-context-modification/issues"
+    "url": "https://github.com/AiLi1337/dsh-context-length/issues"
   }
 }
