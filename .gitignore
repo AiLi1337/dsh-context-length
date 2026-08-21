@@ -1,0 +1,18 @@
+# Dependencies (only relevant if you `npm i react react-dom` to run the smoke test)
+node_modules/
+
+# Local test configuration
+.DCL_TEST_REACT_ROOT
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.iml
+
+# npm / pnpm artifacts
+*.tgz
+package-lock.json
+pnpm-lock.yaml

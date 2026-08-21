@@ -1,0 +1,45 @@
+{
+  "name": "dsh-context-length",
+  "version": "0.1.0",
+  "description": "DSH (DeepSeek Harness) 插件：在「设置 - 模型」下方新增「上下文长度」页面，为指定渠道（提供方）的指定模型自定义上下文窗口长度，点击保存后才写入生效。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "context",
+    "context-window",
+    "settings",
+    "cordis"
+  ],
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ],
+      "immediately": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AiLi1337/dsh-model-context-modification.git"
+  },
+  "homepage": "https://github.com/AiLi1337/dsh-model-context-modification",
+  "bugs": {
+    "url": "https://github.com/AiLi1337/dsh-model-context-modification/issues"
+  }
+}
