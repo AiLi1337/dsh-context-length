@@ -151,6 +151,40 @@ if (mod.resolveModelId(models, "gone") !== "deepseek-v4-flash") throw new Error(
 if (mod.resolveModelId([], "x") !== "") throw new Error("empty model list should clear the selection");
 console.log("resolveModelId: auto-select works");
 
+// ---- test reasoning-effort helpers ----
+const { EFFORT_LEVELS, effortSupportedFor, reasoningStateOf, effortsObjectFor, missingCompatKeys, compatWith } = mod;
+if (EFFORT_LEVELS.join(",") !== "off,minimal,low,medium,high,xhigh,max") throw new Error("bad EFFORT_LEVELS");
+if (effortSupportedFor("deepseek-v4-flash") !== "ok") throw new Error("normal model should be ok");
+if (effortSupportedFor("grok-4.20-non-reasoning") !== "non-reasoning") throw new Error("non-reasoning model not detected");
+if (effortSupportedFor("gpt-image-2") !== "image-video") throw new Error("image model not detected");
+if (effortSupportedFor("grok-imagine-video-1.5") !== "image-video") throw new Error("video model not detected");
+
+const st1 = reasoningStateOf({ id: "m", reasoningEfforts: false });
+if (st1.kind !== "disabled") throw new Error("reasoningEfforts:false should read as disabled");
+const st2 = reasoningStateOf({ id: "m", reasoningEfforts: { off: null, high: "high" } });
+if (st2.kind !== "set" || !st2.levels.includes("off") || !st2.levels.includes("high")) throw new Error("effort map should read as set");
+if (reasoningStateOf({ id: "m" }).kind !== "unset") throw new Error("missing reasoningEfforts should read as unset");
+
+const built = effortsObjectFor(["off", "minimal", "xhigh"]);
+if (built.off !== null || built.minimal !== "minimal" || built.xhigh !== "xhigh" || "max" in built) {
+  throw new Error("effortsObjectFor produced wrong map: " + JSON.stringify(built));
+}
+
+if (missingCompatKeys(undefined).length !== 0) throw new Error("undefined profile must have no missing compat keys");
+if (missingCompatKeys({ api: "anthropic" }).length !== 0) throw new Error("non-openai provider must have no missing compat keys");
+const m1 = missingCompatKeys({ api: "openai-completions" });
+if (m1.join(",") !== "thinkingFormat,supportsReasoningEffort") throw new Error("missing both compat keys, got " + m1.join(","));
+const m2 = missingCompatKeys({ api: "openai-completions", compat: { thinkingFormat: "openai" } });
+if (m2.join(",") !== "supportsReasoningEffort") throw new Error("should only miss supportsReasoningEffort, got " + m2.join(","));
+if (missingCompatKeys({ api: "openai-completions", compat: { thinkingFormat: "openai", supportsReasoningEffort: true } }).length !== 0) {
+  throw new Error("complete compat should have no missing keys");
+}
+const filled = compatWith({ compat: { supportsDeveloperRole: false } });
+if (filled.supportsDeveloperRole !== false || filled.thinkingFormat !== "openai" || filled.supportsReasoningEffort !== true) {
+  throw new Error("compatWith should keep existing keys and add the switch");
+}
+console.log("reasoning-effort helpers: OK");
+
 // ---- trigger the settings.section injection and inspect the registration ----
 const injectFn = slotInjections.get("settings.section");
 if (injectFn === undefined) throw new Error("settings.section slot was not injected");
