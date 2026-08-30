@@ -49,10 +49,26 @@ if (reactRoot !== null) {
     reactForTests = null;
   }
 }
+const mockReactStub = {
+  useState: (init) => [typeof init === "function" ? init() : init, () => {}],
+  useCallback: (fn) => fn,
+  useMemo: (fn) => fn(),
+  useEffect: () => {},
+  useRef: (init) => ({ current: init })
+};
+const mockJsxRuntimeStub = {
+  jsx: (type, props) => ({ type, props }),
+  jsxs: (type, props) => ({ type, props }),
+  Fragment: "Fragment"
+};
 const mockRequire = (spec) => {
-  if (reactForTests === null) throw new Error(`react not configured; set DCL_TEST_REACT_ROOT to a node_modules dir with react + react-dom`);
-  if (spec === "react") return requireFrom(reactForTests.react);
-  if (spec === "react/jsx-runtime") return requireFrom(reactForTests.jsxRuntime);
+  if (reactForTests !== null) {
+    if (spec === "react") return requireFrom(reactForTests.react);
+    if (spec === "react/jsx-runtime") return requireFrom(reactForTests.jsxRuntime);
+  } else {
+    if (spec === "react") return mockReactStub;
+    if (spec === "react/jsx-runtime") return mockJsxRuntimeStub;
+  }
   throw new Error(`unexpected require: ${spec}`);
 };
 
