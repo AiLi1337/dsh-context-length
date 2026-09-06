@@ -108,6 +108,11 @@ const mockCtx = {
     if (name === "connection") return { api: { llm: {}, settings: {}, credentials: {} } };
     return {};
   },
+  remote: {
+    llm: {},
+    settings: {},
+    credentials: {}
+  },
   settingsScope: {
     describe() {
       return {
@@ -227,14 +232,18 @@ if (reactForTests === null) {
   const React = requireFrom(reactForTests.react);
   const renderer = requireFrom(reactForTests.reactDomServer);
   const injected = reg.options.inject();
-  const api = { llm: { providers: async () => ({ result: { ok: true, value: { providers: [] } } }) }, settings: {}, credentials: {} };
+  const remote = {
+    llm: { listConfigurableProviders: async () => ({ ok: true, value: [] }) },
+    settings: {},
+    credentials: {}
+  };
   const describe = {
     ensure: async () => {},
     getSnapshot: () => ({ status: "idle", view: undefined, error: null })
   };
   const schema = mockCtx.settingsSchema;
   const t = mockCtx.locale.bind();
-  const el = React.createElement(reg.component, { ...injected, api, schema, describe, t, close: () => {} });
+  const el = React.createElement(reg.component, { ...injected, remote, schema, describe, t, close: () => {} });
   const html = renderer.renderToString(el);
   console.log("rendered HTML length:", html.length);
   if (html.length === 0) throw new Error("component rendered nothing");
