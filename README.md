@@ -18,22 +18,16 @@ DSH（DeepSeek Harness）插件：在 **设置 → 模型** 下方新增「**上
 - 只有点击「保存」才会通过 `settings.mutate` 写入设置文档并生效；不点保存不产生任何修改。
 - 支持「恢复默认」：清除某个模型的 `contextWindow` 与 `reasoningEfforts` 覆盖，回到提供方默认值。
 
-## 安装
+## 快速安装（npm，推荐）
 
-在需要使用插件的 DeepSeek Harness 界面的「插件」页添加 Git 仓库地址 `https://github.com/AiLi1337/dsh-context-length` 并安装。此包声明了 `dsh.bundle.patch`，安装器会自动把插件挂载到当前 profile，无需再修改 `cordis.patch.yml`。Desktop 和 Web 使用不同的 profile，须分别安装。
-
-本地开发时也可以将此仓库的目录作为插件页的本地路径安装。GitHub 上的修改需要提交并推送后，图形安装器才能获取到；npm 上已发布的 `0.1.0` 仍是旧包，发布包含组合包声明的新版本后才可通过包名安装。
-
-### 旧版 npm 包的手动安装
-
-在新版本发布前，已有的 npm `0.1.0` 仍可作为普通依赖手动挂载，例如 Web profile：
+插件已发布到 npm（`dsh-context-length`），两步即可部署：
 
 ```sh
 cd "$DSH_HOME/profiles/web"
 pnpm add dsh-context-length
 ```
 
-然后在该 profile 的 `cordis.patch.yml` 追加挂载行：
+然后在 profile 的 `cordis.patch.yml` 追加挂载行：
 
 ```yaml
 - insert:
@@ -41,14 +35,21 @@ pnpm add dsh-context-length
       name: 'dsh-context-length'
 ```
 
-刷新浏览器即可在 **设置 → 上下文长度** 看到页面（配置热重载即时生效；若未生效则重启 `dsh web`）。将来改用图形安装时，先删除手动挂载行，避免重复挂载。
-
-旧版手动安装的依赖可以用以下命令更新（仓库新版本发布后）：
+刷新浏览器即可在 **设置 → 上下文长度** 看到页面（配置热重载即时生效；若未生效则重启 `dsh web`）。以后升级：
 
 ```sh
 cd "$DSH_HOME/profiles/web"
 pnpm update dsh-context-length
 ```
+
+## 手动 / 本地开发安装
+
+```sh
+cd "$DSH_HOME/profiles/web"
+pnpm add file:/path/to/dsh-context-length
+```
+
+其余步骤（`cordis.patch.yml` 追加挂载行、刷新浏览器）与上方一致。
 
 ## 使用
 
@@ -61,17 +62,14 @@ pnpm update dsh-context-length
 ## 架构
 
 - `lib/index.js` —— 宿主（node）半端：最小条目，仅保证 loader 挂载。
-- `cordis.patch.yml` —— 组合包配置层，安装器启用组合包时自动挂载宿主条目。
 - `lib/client.js` —— 浏览器半端：设置页 UI。浏览器端的加载走官方机制：`package.json` 声明 `dsh.client`（platform: web），`client-modules` 插件自动把它纳入 `window.__DSH_BOOT__` 引导图，并在 `/plugins/dsh-context-length/client.js` 托管其 bundle。读写全部走官方 wire 接口（`connection.api.llm.providers` / `settings.mutate` / `settingsScope.describe()`），宿主始终是唯一事实源。
 - `test/smoke.mjs` —— 冒烟测试：在 Node 中模拟 DSH 模块加载器环境，验证 client 半端能正确加载、注册 `settings.section`（id=`context-length`，order=11，标签「上下文长度」）。可选：设置 `DCL_TEST_REACT_ROOT` 指向一个含 `react` + `react-dom` 的 `node_modules` 目录，可额外执行 SSR 渲染检查。
-- `test/bundle.mjs` —— 检查组合包声明、打包文件清单及挂载配置。
 
 ## 开发
 
 ```sh
 # 运行冒烟测试
 node test/smoke.mjs
-node test/bundle.mjs
 
 # 发布新版本（需 npm 2FA 验证）
 npm version patch && npm publish
