@@ -18,38 +18,13 @@ DSH（DeepSeek Harness）插件：在 **设置 → 模型** 下方新增「**上
 - 只有点击「保存」才会通过 `settings.mutate` 写入设置文档并生效；不点保存不产生任何修改。
 - 支持「恢复默认」：清除某个模型的 `contextWindow` 与 `reasoningEfforts` 覆盖，回到提供方默认值。
 
-## 快速安装（npm，推荐）
+## 安装
 
-插件已发布到 npm（`dsh-context-length`），两步即可部署：
+在 DeepSeek Harness 的「插件」页面安装 Git 仓库 `https://github.com/AiLi1337/dsh-context-length`。桌面版和 Web 版是不同的 profile，需在各自使用的界面分别安装。包内的 `dsh.bundle.patch` 会让安装器自动挂载插件，无需手动修改 profile 的 `cordis.patch.yml`；安装后重启或刷新界面，在 **设置 → 上下文长度** 查看。
 
-```sh
-cd "$DSH_HOME/profiles/web"
-pnpm add dsh-context-length
-```
+要测试尚未推送到 GitHub 的本地修改，可在「插件」页面选择本地目录安装，或使用 DSH 的插件命令将本地目录添加到相应 profile。GitHub 地址始终安装远端已推送的版本；npm 上原有的 `0.1.0` 没有组合包声明，不能通过桌面版插件页面安装，须发布新版本后才能通过 npm 包名安装。
 
-然后在 profile 的 `cordis.patch.yml` 追加挂载行：
-
-```yaml
-- insert:
-    - id: dsh-context-length
-      name: 'dsh-context-length'
-```
-
-刷新浏览器即可在 **设置 → 上下文长度** 看到页面（配置热重载即时生效；若未生效则重启 `dsh web`）。以后升级：
-
-```sh
-cd "$DSH_HOME/profiles/web"
-pnpm update dsh-context-length
-```
-
-## 手动 / 本地开发安装
-
-```sh
-cd "$DSH_HOME/profiles/web"
-pnpm add file:/path/to/dsh-context-length
-```
-
-其余步骤（`cordis.patch.yml` 追加挂载行、刷新浏览器）与上方一致。
+此前已在 Web profile 手动添加过 `cordis.patch.yml` 挂载行的用户，改用图形安装前请移除那条手动挂载行，避免同一个插件 id 重复插入。
 
 ## 使用
 
@@ -62,14 +37,17 @@ pnpm add file:/path/to/dsh-context-length
 ## 架构
 
 - `lib/index.js` —— 宿主（node）半端：最小条目，仅保证 loader 挂载。
-- `lib/client.js` —— 浏览器半端：设置页 UI。浏览器端的加载走官方机制：`package.json` 声明 `dsh.client`（platform: web），`client-modules` 插件自动把它纳入 `window.__DSH_BOOT__` 引导图，并在 `/plugins/dsh-context-length/client.js` 托管其 bundle。读写全部走官方 wire 接口（`connection.api.llm.providers` / `settings.mutate` / `settingsScope.describe()`），宿主始终是唯一事实源。
+- `cordis.patch.yml` —— 组合包的挂载补丁，由插件安装器自动加入当前 profile。
+- `lib/client.js` —— 浏览器半端：设置页 UI。浏览器端的加载走官方机制：`package.json` 声明 `dsh.client`（platform: web），`client-modules` 插件自动把它纳入 `window.__DSH_BOOT__` 引导图。通过 `ctx.remote.llm`、`ctx.remote.settings.mutate` 和 `ctx.configForms.describe()` 读写，宿主始终是唯一事实源。
 - `test/smoke.mjs` —— 冒烟测试：在 Node 中模拟 DSH 模块加载器环境，验证 client 半端能正确加载、注册 `settings.section`（id=`context-length`，order=11，标签「上下文长度」）。可选：设置 `DCL_TEST_REACT_ROOT` 指向一个含 `react` + `react-dom` 的 `node_modules` 目录，可额外执行 SSR 渲染检查。
+- `test/bundle.mjs` —— 验证桌面版所需的组合包声明、挂载补丁和宿主入口。
 
 ## 开发
 
 ```sh
 # 运行冒烟测试
 node test/smoke.mjs
+node test/bundle.mjs
 
 # 发布新版本（需 npm 2FA 验证）
 npm version patch && npm publish

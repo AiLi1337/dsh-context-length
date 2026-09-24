@@ -113,7 +113,7 @@ const mockCtx = {
     settings: {},
     credentials: {}
   },
-  settingsScope: {
+  configForms: {
     describe() {
       return {
         ensure: async () => {},
@@ -142,6 +142,8 @@ const mockCtx = {
 };
 
 // ---- run apply ----
+if (mod.inject.includes("settingsScope")) throw new Error("settingsScope no longer exists in DSH 0.1.7; plugin will wait for activation");
+if (!mod.inject.includes("configForms")) throw new Error("plugin must inject the settings mirror through configForms");
 mod.apply(mockCtx);
 
 // ---- test configuredProvidersOf filtering ----
@@ -211,6 +213,7 @@ const injectFn = slotInjections.get("settings.section");
 if (injectFn === undefined) throw new Error("settings.section slot was not injected");
 const reg = injectFn();
 if (reg === undefined) throw new Error("slot injection returned nothing");
+if (typeof reg.options.inject().describe.ensure !== "function") throw new Error("settings mirror not injected from configForms");
 console.log("registered settings.section options:", JSON.stringify({
   id: reg.options.id,
   order: reg.options.order,
